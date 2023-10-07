@@ -69,14 +69,15 @@ class Model_pred:
         else:
             raise ValueError('Incorrect model type entered, options are: "affectnet8" and "ED"')
 
-        
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_default.xml')
+
+        self.face_cascade = cv2.CascadeClassifier(
+            f'{cv2.data.haarcascades}haarcascade_frontalface_default.xml'
+        )
 
 
     def detect_faces(self, img_:Image.Image):
         img_ = cv2.cvtColor(np.asarray(img_),cv2.COLOR_RGB2BGR)
-        faces = self.face_cascade.detectMultiScale(img_, 1.2, 6) #1.2, 6
-        return faces
+        return self.face_cascade.detectMultiScale(img_, 1.2, 6)
     
     def predict_emotion(self, path, file_type):
 
@@ -84,7 +85,7 @@ class Model_pred:
             img_pil = Image.open(path).convert('RGB')
             img_cv = np.array(img_pil) 
             img_cv = img_cv[:, :, ::-1].copy()
-            
+
             faces = self.detect_faces(img_pil)
             preds = []
 
@@ -96,7 +97,7 @@ class Model_pred:
                     output = self.model(cropped_face)
                     pred = self.labels[int(torch.argmax(output))]
                     preds.append(pred)
-            
+
                 # Add rectangels
                 img_cv = cv2.rectangle(img_cv, (x,y), (x+w,y+h), (0,255,0), 2)
                 (w, h), _ = cv2.getTextSize(pred, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
@@ -104,8 +105,8 @@ class Model_pred:
                 img_cv = cv2.putText(img_cv, pred, (x, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 1)
 
             return img_cv, preds
-        
-        
+
+
         elif file_type == 'video':
             cap = cv2.VideoCapture(path)
             output_array = []
@@ -113,30 +114,30 @@ class Model_pred:
             while True:
                 ret, img_cv = cap.read()
                 preds = []
-                
-                if ret == True:
-                    img_pil = Image.fromarray(img_cv)
-                    faces = self.detect_faces(img_cv)
-                    for (x,y,w,h) in faces:
-                        cropped_face = img_pil.crop((x,y, x+w, y+h))
-                        cropped_face = self.data_transforms(cropped_face).unsqueeze(0)
 
-                        with torch.set_grad_enabled(False):
-                            output = self.model(cropped_face)
-                            pred = self.labels[int(torch.argmax(output))]
-                            preds.append(pred)
+                if ret != True:
+                    break
 
-                        # Add rectangels
-                        img_cv = cv2.rectangle(img_cv, (x,y), (x+w,y+h), (0,255,0), 2)
-                        (w, h), _ = cv2.getTextSize(pred, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
-                        img_cv = cv2.rectangle(img_cv, (x, y-20), (x+w, y), (0,255,0), -1)
-                        img_cv = cv2.putText(img_cv, pred, (x, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 1)
-                    
-                    output_array.append(img_cv)
-                    if cv2.waitKey(1) & 0xFF == 27:
-                        break
-                else: break
+                img_pil = Image.fromarray(img_cv)
+                faces = self.detect_faces(img_cv)
+                for (x,y,w,h) in faces:
+                    cropped_face = img_pil.crop((x,y, x+w, y+h))
+                    cropped_face = self.data_transforms(cropped_face).unsqueeze(0)
 
+                    with torch.set_grad_enabled(False):
+                        output = self.model(cropped_face)
+                        pred = self.labels[int(torch.argmax(output))]
+                        preds.append(pred)
+
+                    # Add rectangels
+                    img_cv = cv2.rectangle(img_cv, (x,y), (x+w,y+h), (0,255,0), 2)
+                    (w, h), _ = cv2.getTextSize(pred, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+                    img_cv = cv2.rectangle(img_cv, (x, y-20), (x+w, y), (0,255,0), -1)
+                    img_cv = cv2.putText(img_cv, pred, (x, y-5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 1)
+
+                output_array.append(img_cv)
+                if cv2.waitKey(1) & 0xFF == 27:
+                    break
             cap.release()
             return output_array, preds
 
@@ -174,7 +175,10 @@ if __name__ == '__main__':
 
     file = filetype.guess(FILE_PATH)
     file_type = file.mime.split('/')[0]
-    assert (file_type=='video' or file_type=='image'), 'The only accepted formats are images and videos'
+    assert file_type in [
+        'video',
+        'image',
+    ], 'The only accepted formats are images and videos'
     logger.info(f'File type detected as: {file_type}')
 
     out, labels = model.predict_emotion(FILE_PATH, file_type)

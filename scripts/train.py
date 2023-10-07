@@ -86,17 +86,19 @@ def train():
     total_train_f1       = []
     total_val_f1         = []
     learning_rate_tracker = []
-    logger.info(f'Model, optimizer, scheduler and criterion initialised, starting training')
+    logger.info(
+        'Model, optimizer, scheduler and criterion initialised, starting training'
+    )
 
     ######################
     # Train model
     ######################
     for epoch in range(1, EPOCHS+1):
-    
+
         model.train()
         train_losses, train_accuracy, train_f1 = [], [], []
-    
-        for i, batch in enumerate(train_dataloader):
+
+        for batch in train_dataloader:
             img_batch, label_batch = batch   #img [B,3,H,W], label[B,N_CLASSES]
             img_batch = img_batch.to(DEVICE)
             label_batch = label_batch.type(torch.LongTensor).to(DEVICE)
@@ -114,22 +116,22 @@ def train():
             train_losses.append(loss.item())
             train_accuracy.append(acc.cpu())
             train_f1.append(f1)
-    
+
         # Update global trackers
-        print(f'TRAIN       Epoch: {epoch} | Epoch metrics | loss: {np.mean(train_losses):.4f}, f1: {np.mean(train_f1):.3f}, accuracy: {np.mean(train_accuracy):.3f}, learning rate: {optimizer.state_dict()["param_groups"][0]["lr"]:.6f}')        
+        print(f'TRAIN       Epoch: {epoch} | Epoch metrics | loss: {np.mean(train_losses):.4f}, f1: {np.mean(train_f1):.3f}, accuracy: {np.mean(train_accuracy):.3f}, learning rate: {optimizer.state_dict()["param_groups"][0]["lr"]:.6f}')
         total_train_losses.append(np.mean(train_losses))
         total_train_accuracy.append(np.mean(train_accuracy))
         total_train_f1.append(np.mean(train_f1))
-        
+
         #Update learning rate
         learning_rate_tracker.append(optimizer.state_dict()['param_groups'][0]['lr'])
         scheduler.step()
-    
+
         # Validation set performance
         model.eval()
         val_losses, val_accuracy, val_f1 = [], [], []
-    
-        for i, batch in enumerate(val_dataloader):
+
+        for batch in val_dataloader:
             img_batch, label_batch = batch
             img_batch = img_batch.to(DEVICE)
             label_batch = label_batch.type(torch.LongTensor).to(DEVICE)
@@ -145,7 +147,7 @@ def train():
             val_losses.append(loss.item())
             val_accuracy.append(acc.cpu())
             val_f1.append(f1)
-    
+
         # Update global trackers
         print(f'VALIDATION  Epoch: {epoch} | Epoch metrics | loss: {np.mean(val_losses):.4f}, f1: {np.mean(val_f1):.3f}, accuracy: {np.mean(val_accuracy):.3f}')
         print('-'*106)
@@ -154,7 +156,7 @@ def train():
         total_val_f1.append(np.mean(val_f1))
     logger.info('Training complete | last epoch metrics | Training loss: {total_train_losses[-1]}, val loss: {total_val_losses[-1]}, training accuracy: {total_train_accuracy[-1]}, val accuracy: {total_val_accuracy[-1]}, training f1: {total_train_f1[-1]}, val f1: {total_val_f1[-1]}')
 
-    
+
     # Save the model
     torch.save(model.state_dict(), MODEL_PATH)
     logger.info(f'Model saved in {MODEL_PATH}')
@@ -165,7 +167,7 @@ def train():
                             columns = ['train_loss', 'val_loss', 'train_f1', 'test_f1', 'train_accuracy',
                                     'test_accuracy'])
     temp_df.to_csv('log/results.csv')
-    logger.info(f'Detailed results saved in log/results.csv')
+    logger.info('Detailed results saved in log/results.csv')
       
 
 if __name__ == '__main__':

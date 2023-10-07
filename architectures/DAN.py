@@ -26,17 +26,14 @@ class DAN(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
-        heads = []
-        for i in range(self.num_head):
-            heads.append(getattr(self,"cat_head%d" %i)(x))
-        
+        heads = [getattr(self,"cat_head%d" %i)(x) for i in range(self.num_head)]
         heads = torch.stack(heads).permute([1,0,2])
         if heads.size(1)>1:
             heads = F.log_softmax(heads,dim=1)
-            
+
         out = self.fc(heads.sum(dim=1))
         out = self.bn(out)
-   
+
         return out
 
 class CrossAttentionHead(nn.Module):
@@ -93,10 +90,8 @@ class SpatialAttention(nn.Module):
     def forward(self, x):
         y = self.conv1x1(x)
         y = self.relu(self.conv_3x3(y) + self.conv_1x3(y) + self.conv_3x1(y))
-        y = y.sum(dim=1,keepdim=True) 
-        out = x*y
-        
-        return out 
+        y = y.sum(dim=1,keepdim=True)
+        return x*y 
 
 class ChannelAttention(nn.Module):
 
@@ -116,6 +111,4 @@ class ChannelAttention(nn.Module):
         sa = self.gap(sa)
         sa = sa.view(sa.size(0),-1)
         y = self.attention(sa)
-        out = sa * y
-        
-        return out
+        return sa * y

@@ -68,7 +68,7 @@ def etl():
     X_test = pixels[test_idx]
     y_test = torch.Tensor(df.iloc[test_idx]['emotion'].tolist())
 
-    logger.info(f'Data split to train/val/test sets')
+    logger.info('Data split to train/val/test sets')
     logger.info(f'Train set shape: {X_train.shape}, val test shape: {X_val.shape}, test set shape: {X_test.shape}')
 
     ######################
