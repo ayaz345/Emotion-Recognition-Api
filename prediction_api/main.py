@@ -26,8 +26,7 @@ async def root():
 @app.post('/predict')
 async def predict_img(file: UploadFile=File()):
     img = read_img(await file.read())
-    preds = model.predict(img)
-    return preds
+    return model.predict(img)
 
 
 if __name__ == '__main__':

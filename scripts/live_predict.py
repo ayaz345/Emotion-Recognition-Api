@@ -43,11 +43,12 @@ class Model_pred:
         self.model.load_state_dict(checkpoint['model_state_dict'], strict=True)
         self.model.to(self.device)
         self.model.eval()
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_default.xml')
+        self.face_cascade = cv2.CascadeClassifier(
+            f'{cv2.data.haarcascades}haarcascade_frontalface_default.xml'
+        )
 
     def detect_faces(self, img_:np.array):
-        faces = self.face_cascade.detectMultiScale(img_, 1.2, 6)
-        return faces
+        return self.face_cascade.detectMultiScale(img_, 1.2, 6)
     
     def predict_emotion(self, img_cv:np.array):
         img_pil = Image.fromarray(cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB))    
@@ -88,12 +89,11 @@ if __name__ == '__main__':
     capture = cv2.VideoCapture(0)
     while True:
         ret, img = capture.read()
-        if ret == True:
-            output_img = model.predict_emotion(img)
-            cv2.imshow('Live emotion prediction', img)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-        else:
+        if ret != True:
+            break
+        output_img = model.predict_emotion(img)
+        cv2.imshow('Live emotion prediction', img)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     capture.release()
     cv2.destroyAllWindows()

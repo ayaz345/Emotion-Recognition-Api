@@ -35,12 +35,13 @@ class Predictor:
         self.model.load_state_dict(checkpoint['model_state_dict'], strict=True)
         self.model.to(self.device)
         self.model.eval()
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_default.xml')
+        self.face_cascade = cv2.CascadeClassifier(
+            f'{cv2.data.haarcascades}haarcascade_frontalface_default.xml'
+        )
 
     def detect_faces(self, img_):
         img_ = cv2.cvtColor(np.asarray(img_),cv2.COLOR_RGB2BGR)
-        faces = self.face_cascade.detectMultiScale(img_, 1.2, 6)
-        return faces
+        return self.face_cascade.detectMultiScale(img_, 1.2, 6)
 
     def predict(self, img_pil:Image.Image):
         img_cv = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
